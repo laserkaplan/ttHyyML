@@ -38,4 +38,7 @@ After setting up the environment for the first time, you can return to this setu
 setupATLAS
 lsetup root
 source ve/bin/activate
+
+export PATH="`pwd`:${PATH}"
+export PYTHONPATH="`pwd`:${PYTHONPATH}"
 ```
