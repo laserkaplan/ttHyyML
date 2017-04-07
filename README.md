@@ -23,7 +23,7 @@ Then, checkout necessary packages:
 
 ```
 pip install pip --upgrade
-pip install theano keras h5py root_numpy
+pip install theano keras h5py root_numpy sklearn
 ```
 
 If this is the first time you are using keras, you will want to change the backend to theano instead of the default tensorflow.
