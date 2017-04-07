@@ -23,7 +23,8 @@ Then, checkout necessary packages:
 
 ```
 pip install pip --upgrade
-pip install theano keras h5py root_numpy sklearn
+pip install theano keras h5py sklearn
+pip install --upgrade https://github.com/rootpy/root_numpy/zipball/master
 ```
 
 If this is the first time you are using keras, you will want to change the backend to theano instead of the default tensorflow.
