@@ -7,15 +7,20 @@ parser.add_argument('--cat', '--categorical', action='store_true', help='Create 
 args = parser.parse_args()
 
 import ROOT
-import numpy as np
 from root_numpy import root2array, rec2array
-from sklearn import model_selection
-from sklearn.metrics import roc_curve, auc
-from keras.utils.np_utils import to_categorical
-import matplotlib.pyplot as plt
+
+import numpy as np
+
 from ttHyy.models import model_shallow
 
-def main():
+from sklearn import model_selection
+from sklearn.metrics import roc_curve, auc
+
+from keras.utils.np_utils import to_categorical
+
+import matplotlib.pyplot as plt
+    
+def train_leptonic():
     # load data
     print('Loading data.')
 
@@ -56,7 +61,8 @@ def main():
     # train model
     print('Train model.')
 
-    model = model_shallow(4, 2, True)
+    model = model_shallow(4, True)
+    model.summary()
     model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
     model.fit(train, y_train_cat, epochs=20, batch_size=32, validation_data=(val, y_val_cat))
 
