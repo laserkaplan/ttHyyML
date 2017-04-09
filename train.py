@@ -1,4 +1,11 @@
 import os
+
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('-c', '--channel', action='store', choices=['l', 'lep', 'leptonic', 'h', 'had', 'hadronic'], default='l', help='Channel to process')
+parser.add_argument('--cat', '--categorical', action='store_true', help='Create categorical model')
+args = parser.parse_args()
+
 import ROOT
 import numpy as np
 from root_numpy import root2array, rec2array
@@ -71,6 +78,20 @@ def main():
     plt.title('Receiver operating characteristic')
     plt.legend(loc='lower right')
     plt.show()
+
+    return
+
+def main():
+    if args.channel[0] == 'l':
+        if args.cat: 
+            print('No support for categorical model yet!')
+            return
+        else:
+            print('Training binary leptonic model.')
+            train_leptonic()
+    else:
+        print('No support for hadronic model yet!')
+        return
 
     return
 
