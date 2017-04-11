@@ -1,9 +1,16 @@
 import os
 
+def signal_multiplier(s):
+    s = float(s)
+    if s < 0.0:
+        raise argparse.ArgumentTypeError('%r must be >= 0!' % s)
+    return s
+
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--channel', action='store', choices=['l', 'lep', 'leptonic', 'h', 'had', 'hadronic'], default='l', help='Channel to process')
 parser.add_argument('--cat', '--categorical', action='store_true', help='Create categorical model')
+parser.add_argument('-s', '--signal', action='store', type=signal_multiplier, default='5', help='Number of signal events to use in training as a multiple of the number of background events. Value of 0 means use all signal events.')
 args = parser.parse_args()
 
 import ROOT
@@ -25,9 +32,21 @@ def train_leptonic():
     print('Loading data.')
 
     branches = ['N_j_central30', 'm_HT_30/1000', 'm_mT/1000', 'm_pTlepEtmiss/1000']
+    selection = 'm_nlep >= 1 && N_j_central30 >= 1 && N_j_btag30 == 0'
+    selectiondata = selection + ' && (ph_isTight1 != 0 || ph_iso1 != 0 || ph_isTight2 != 0 || ph_iso2 != 0)'
 
-    sig = rec2array(root2array('inputs/ttHrw.root' , treename='output;5', branches=branches))
-    bkg = rec2array(root2array('inputs/datarw.root', treename='output'  , branches=branches))
+    sig = root2array('inputs/ttHrw.root'       , treename='output;5', branches=branches, selection=selection    )
+    bkg = root2array('inputs/data_looserw.root', treename='output'  , branches=branches, selection=selectiondata)
+
+    print('Number of background events = %d' % len(bkg))
+    if len(sig) < args.signal * len(bkg): 
+        print('Number of signal events = %d' % len(sig))
+    else: 
+        print('Restricting number of signal events to %r * %d = %d' % (args.signal, len(bkg), int(args.signal * len(bkg))))
+        sig = np.random.choice(sig, size=int(args.signal * len(bkg)))
+    
+    sig = rec2array(sig)
+    bkg = rec2array(bkg)
 
     # split data into train, val, and test samples
     print('Splitting data.')
