@@ -11,6 +11,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-c', '--channel', action='store', choices=['l', 'lep', 'leptonic', 'h', 'had', 'hadronic'], default='l', help='Channel to process')
 parser.add_argument('--cat', '--categorical', action='store_true', help='Create categorical model')
 parser.add_argument('-s', '--signal', action='store', type=signal_multiplier, default='5', help='Number of signal events to use in training as a multiple of the number of background events. Value of 0 means use all signal events.')
+parser.add_argument('-n', '--name', action='store', default='test', help='Name of output plot.')
 args = parser.parse_args()
 
 import ROOT
@@ -102,6 +103,11 @@ def train_leptonic():
     plt.ylabel('True positive rate')
     plt.title('Receiver operating characteristic')
     plt.legend(loc='lower right')
+
+    pltname = 'plots/plot_' + args.name
+    plt.savefig(pltname + '.png')
+    plt.savefig(pltname + '.eps')
+    
     plt.show()
 
     return
