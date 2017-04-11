@@ -39,7 +39,7 @@ def train_leptonic():
     bkg = root2array('inputs/data_looserw.root', treename='output'  , branches=branches, selection=selectiondata)
 
     print('Number of background events = %d' % len(bkg))
-    if len(sig) < args.signal * len(bkg): 
+    if args.signal == 0 or len(sig) < args.signal * len(bkg): 
         print('Number of signal events = %d' % len(sig))
     else: 
         print('Restricting number of signal events to %r * %d = %d' % (args.signal, len(bkg), int(args.signal * len(bkg))))
