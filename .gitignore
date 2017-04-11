@@ -1,3 +1,6 @@
 *.pyc
+*.png
+*.eps
+*.root
 ve/
 inputs
