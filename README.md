@@ -23,7 +23,7 @@ Then, checkout necessary packages:
 
 ```
 pip install pip --upgrade
-pip install theano keras h5py sklearn matplotlib
+pip install theano keras h5py sklearn matplotlib tabulate
 pip install --upgrade https://github.com/rootpy/root_numpy/zipball/master
 ```
 
