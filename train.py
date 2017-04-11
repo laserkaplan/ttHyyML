@@ -19,7 +19,7 @@ from root_numpy import root2array, rec2array
 
 import numpy as np
 
-from ttHyy.models import model_shallow
+from ttHyy import *
 
 from sklearn import model_selection
 from sklearn.metrics import roc_curve, auc
@@ -39,13 +39,8 @@ def train_leptonic():
     sig = root2array('inputs/ttHrw.root'       , treename='output;5', branches=branches, selection=selection    )
     bkg = root2array('inputs/data_looserw.root', treename='output'  , branches=branches, selection=selectiondata)
 
-    print('Number of background events = %d' % len(bkg))
-    if args.signal == 0 or len(sig) < args.signal * len(bkg): 
-        print('Number of signal events = %d' % len(sig))
-    else: 
-        print('Restricting number of signal events to %r * %d = %d' % (args.signal, len(bkg), int(args.signal * len(bkg))))
-        sig = np.random.choice(sig, size=int(args.signal * len(bkg)))
-    
+    sig = utils.restrictSample(sig, len(bkg), args.signal)
+
     sig = rec2array(sig)
     bkg = rec2array(bkg)
 
@@ -81,7 +76,7 @@ def train_leptonic():
     # train model
     print('Train model.')
 
-    model = model_shallow(4, True)
+    model = models.model_shallow(4, True)
     model.summary()
     model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
     model.fit(train, y_train_cat, epochs=20, batch_size=32, validation_data=(val, y_val_cat))
@@ -104,7 +99,7 @@ def train_leptonic():
     plt.title('Receiver operating characteristic')
     plt.legend(loc='lower right')
 
-    pltname = 'plots/plot_' + args.name
+    pltname = 'plots/ROC_curve_leptonic_' + args.name
     plt.savefig(pltname + '.png')
     plt.savefig(pltname + '.eps')
     
