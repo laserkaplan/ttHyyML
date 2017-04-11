@@ -66,4 +66,4 @@ It is suggested to use a symbolic link to the public directory that the ntuples 
 
 The models used in the analysis can be found in `ttHyy/models.py`.
 Currently, only a shallow model is used.
-Deeper models will be added as the need for additiona neural network complexity arises.
+Deeper models will be added as the need for additional neural network complexity arises.
