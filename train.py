@@ -27,6 +27,8 @@ from sklearn.metrics import roc_curve, auc
 from keras.utils.np_utils import to_categorical
 
 import matplotlib.pyplot as plt
+
+from tabulate import tabulate
     
 def train_leptonic():
     # load data
@@ -51,6 +53,13 @@ def train_leptonic():
     train_bkg, test_bkg = model_selection.train_test_split(bkg, test_size = 0.3, random_state=1234)
     val_sig, test_sig = np.split(test_sig, [len(test_sig) / 2])
     val_bkg, test_bkg = np.split(test_bkg, [len(test_bkg) / 2])
+
+    headers = ['Sample', 'Total', 'Training', 'Validation', 'Testing']
+    sample_size_table = [
+        ['Signal'    , len(sig), len(train_sig), len(val_sig), len(test_sig)],
+        ['Background', len(bkg), len(train_bkg), len(val_bkg), len(test_bkg)],
+    ]
+    print tabulate(sample_size_table, headers=headers, tablefmt='simple')
 
     # organize data for training
     print('Organizing data for training.')
