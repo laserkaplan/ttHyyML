@@ -12,6 +12,7 @@ parser.add_argument('-c', '--channel', action='store', choices=['l', 'lep', 'lep
 parser.add_argument('--cat', '--categorical', action='store_true', help='Create categorical model')
 parser.add_argument('-s', '--signal', action='store', type=signal_multiplier, default='5', help='Number of signal events to use in training as a multiple of the number of background events. Value of 0 means use all signal events.')
 parser.add_argument('-n', '--name', action='store', default='test', help='Name of output plot.')
+parser.add_argument('--save', action='store_true', help='Save model weights to HDF5 file')
 args = parser.parse_args()
 
 import ROOT
@@ -113,6 +114,11 @@ def train_leptonic():
     plt.savefig(pltname + '.eps')
     
     plt.show()
+
+    # save model
+    if args.save:
+        print('Saving model')
+        model.save_weights('models/model_leptonic_shallow.h5')
 
     return
 

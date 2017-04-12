@@ -2,5 +2,6 @@
 *.png
 *.eps
 *.root
+*.h5
 ve/
 inputs
