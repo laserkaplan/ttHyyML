@@ -22,7 +22,7 @@ def main():
     model.load_weights(args.model)
 
     # open file and get tree
-    infile = ROOT.TFile.Open('inputs/%s.root' % args.input)
+    infile = ROOT.TFile.Open('inputs_leptonic/%s.root' % args.input)
     intree = infile.Get(args.tree)
 
     # create new tree

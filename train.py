@@ -39,8 +39,8 @@ def train_leptonic():
     selectionsignal = 'N_lep > 0 && N_j_btag30 > 0'
     selectiondata = 'N_lep > 0 && N_j_btag30 == 0 && N_j_central30 > 0 && (ph_isTight1 != 0 || ph_iso1 != 0 || ph_isTight2 != 0 || ph_iso2 != 0)'
 
-    sig = root2array('inputs/ttHrw.root'       , treename='output;5', branches=branches, selection=selectionsignal)
-    bkg = root2array('inputs/data_looserw.root', treename='output'  , branches=branches, selection=selectiondata  )
+    sig = root2array('inputs_leptonic/ttHrw.root'       , treename='output;5', branches=branches, selection=selectionsignal)
+    bkg = root2array('inputs_leptonic/data_looserw.root', treename='output'  , branches=branches, selection=selectiondata  )
 
     sig = utils.restrictSample(sig, len(bkg), args.signal)
 
