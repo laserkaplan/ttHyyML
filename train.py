@@ -102,12 +102,19 @@ def train_leptonic():
     fpr, tpr, _ = roc_curve(y_test_cat, score)
     roc_auc = auc(fpr, tpr)
 
-    plt.plot(fpr, tpr, label='Shallow NN, area = %0.2f' % roc_auc)
-    plt.plot([0, 1], [0, 1], linestyle='--', color='black', label='Luck')
-    plt.xlabel('False positive rate')
-    plt.ylabel('True positive rate')
+    fpr = 1.0 - fpr
+
+    plt.grid(color='gray', linestyle='--', linewidth=1)
+    plt.plot(tpr, fpr, label='Shallow NN, area = %0.2f' % roc_auc)
+    plt.plot([0, 1], [1, 0], linestyle='--', color='black', label='Luck')
+    plt.xlabel('Signal acceptance')
+    plt.ylabel('Background rejection')
     plt.title('Receiver operating characteristic')
-    plt.legend(loc='lower right')
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
+    plt.xticks(np.arange(0, 1, 0.1))
+    plt.yticks(np.arange(0, 1, 0.1))
+    plt.legend(loc='lower left', framealpha=1.0)
 
     pltname = 'plots/ROC_curve_leptonic_' + args.name
     plt.savefig(pltname + '.png')
@@ -186,12 +193,19 @@ def train_hadronic():
     fpr, tpr, _ = roc_curve(y_test_cat, score)
     roc_auc = auc(fpr, tpr)
 
-    plt.plot(fpr, tpr, label='Shallow NN, area = %0.2f' % roc_auc)
-    plt.plot([0, 1], [0, 1], linestyle='--', color='black', label='Luck')
-    plt.xlabel('False positive rate')
-    plt.ylabel('True positive rate')
+    fpr = 1.0 - fpr
+
+    plt.grid(color='gray', linestyle='--', linewidth=1)
+    plt.plot(tpr, fpr, label='Shallow NN, area = %0.2f' % roc_auc)
+    plt.plot([0, 1], [1, 0], linestyle='--', color='black', label='Luck')
+    plt.xlabel('Signal acceptance')
+    plt.ylabel('Background rejection')
     plt.title('Receiver operating characteristic')
-    plt.legend(loc='lower right')
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
+    plt.xticks(np.arange(0, 1, 0.1))
+    plt.yticks(np.arange(0, 1, 0.1))
+    plt.legend(loc='lower left', framealpha=1.0)
 
     pltname = 'plots/ROC_curve_hadronic_' + args.name
     plt.savefig(pltname + '.png')
