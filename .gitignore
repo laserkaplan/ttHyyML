@@ -4,4 +4,5 @@
 *.root
 *.h5
 ve/
-inputs
+inputs_leptonic
+inputs_hadronic
