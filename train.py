@@ -133,7 +133,7 @@ def train_hadronic():
     # load data
     print('Loading data.')
 
-    branches = ['N_j_30', 'N_j_central30', 'N_j_btag30', 'm_HT_30/1000', 'm_alljet/1000']
+    branches = ['N_j_30', 'N_j_central30', 'N_j_btag30', 'm_HT_30/1000000', 'm_alljet/1000000']
     selectionMC   = 'N_lep == 0 && N_j_30 >= 3 && N_j_btag30 > 0'
     selectiondata = 'N_lep == 0 && N_j_30 >= 3 && N_j_btag30 > 0 && (ph_isTight1 == 0 || ph_iso1 == 0 || ph_isTight2 == 0 || ph_iso2 == 0)'
 
