@@ -9,7 +9,10 @@ parser.add_argument('-t', '--tree', action='store', default='output', help='Name
 parser.add_argument('-n', '--name', action='store', required=True, help='Name to be appended to output file') 
 args = parser.parse_args()
 
+import math
+
 import ROOT
+from root_numpy import root2array, rec2array
 
 from array import array
 
@@ -74,7 +77,7 @@ def process_leptonic():
 
 def process_hadronic():
     # load model
-    model = models.model_shallow(5, True)
+    model = models.model_shallow(6, True)
     model.load_weights(args.model)
 
     # open file and get tree
@@ -107,20 +110,38 @@ def process_hadronic():
     outtree.Branch('weight'     , weight     , 'weight/F'     )
     outtree.Branch('nnweight'   , nnweight   , 'nnweight/F'   )
 
+    # get NN score
+    branches = [
+        'N_j_30',
+        'N_j_central30',
+        'N_j_btag30',
+        'm_HT_30/1000000',
+        'm_alljet/1000000',
+        'm_met/sqrt(m_HT_30)',
+        'm_yy',
+        'N_lep',
+        'ph_isTight1',
+        'ph_iso1',
+        'ph_isTight2',
+        'ph_iso2',
+        'm_weight',
+    ]
+    inX = rec2array(root2array('inputs_hadronic/%s.root' % args.input, treename=args.tree, branches=branches))
+    score = model.predict(inX[:, :6])
+    inX = np.column_stack((inX, score))
+
     # loop over input tree and fill new tree
-    for event in intree:
-        test = np.array([[event.N_j_30, event.N_j_central30, event.N_j_btag30, event.m_HT_30 / 1000.0, event.m_alljet / 1000.0]])
-        score = model.predict(test)
-        m_yy[0]        = event.m_yy
-        N_lep[0]       = event.N_lep
-        N_j_30[0]      = event.N_j_30
-        N_j_btag30[0]  = event.N_j_btag30
-        ph_isTight1[0] = event.ph_isTight1
-        ph_iso1[0]     = event.ph_iso1
-        ph_isTight2[0] = event.ph_isTight2
-        ph_iso2[0]     = event.ph_iso2
-        weight[0]      = event.m_weight
-        nnweight[0]    = score[0]
+    for event in inX:
+        m_yy[0]        = event[6]
+        N_lep[0]       = int(event[7])
+        N_j_30[0]      = int(event[0])
+        N_j_btag30[0]  = int(event[2])
+        ph_isTight1[0] = int(event[8])
+        ph_iso1[0]     = int(event[9])
+        ph_isTight2[0] = int(event[10])
+        ph_iso2[0]     = int(event[11])
+        weight[0]      = event[12]
+        nnweight[0]    = event[13]
         outtree.Fill()
 
     # save new tree
