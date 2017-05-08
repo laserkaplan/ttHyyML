@@ -197,7 +197,7 @@ def train_hadronic():
     # load data
     print('Loading data.')
 
-    branches = ['N_j_30', 'N_j_central30', 'N_j_btag30', 'm_HT_30/1000000', 'm_alljet/1000000']
+    branches = ['N_j_30', 'N_j_central30', 'N_j_btag30', 'm_HT_30/1000000', 'm_alljet/1000000', 'm_met/sqrt(m_HT_30)']
     selectionMC   = 'N_lep == 0 && N_j_30 >= 3 && N_j_btag30 > 0'
     selectiondata = 'N_lep == 0 && N_j_30 >= 3 && N_j_btag30 > 0 && (ph_isTight1 == 0 || ph_iso1 == 0 || ph_isTight2 == 0 || ph_iso2 == 0)'
 
@@ -241,10 +241,10 @@ def train_hadronic():
     # train model
     print('Train model.')
 
-    model = models.model_shallow(5, True)
+    model = models.model_shallow(6, True)
     model.summary()
     model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
-    model.fit(train, y_train_cat, epochs=20, batch_size=32, validation_data=(val, y_val_cat))
+    model.fit(train, y_train_cat, epochs=100, batch_size=32, validation_data=(val, y_val_cat))
 
     # test model
     print('Test model.')
