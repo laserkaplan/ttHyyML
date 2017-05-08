@@ -100,7 +100,7 @@ def train_leptonic_categorical():
     # load data
     print('Loading data.')
 
-    branches = ['N_j_central30', 'm_HT_30/1000', 'm_mT/1000', 'm_pTlepEtmiss/1000']
+    branches = ['N_j_central30', 'm_HT_30/1000', 'm_mT/1000', 'm_pTlepEtmiss/1000', 'm_njet_fwd']
     selectionMC   = 'N_lep > 0 && N_j_btag30 > 0'
     selectiondata = 'N_lep > 0 && N_j_btag30 == 0 && N_j_central30 > 0 && (ph_isTight1 == 0 || ph_iso1 == 0 || ph_isTight2 == 0 || ph_iso2 == 0)'
 
@@ -169,7 +169,7 @@ def train_leptonic_categorical():
     # train model
     print('Train model.')
 
-    model = models.model_shallow_categorical(4, 3, True)
+    model = models.model_deep_categorical(5, 3, True)
     model.summary()
     model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
     model.fit(train, y_train_cat, epochs=20, batch_size=32, validation_data=(val, y_val_cat))
