@@ -8,7 +8,7 @@ def signal_multiplier(s):
 
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument('-c', '--channel', action='store', choices=['l', 'lep', 'leptonic', 'h', 'had', 'hadronic'], default='l', help='Channel to process')
+parser.add_argument('-c', '--channel', action='store', choices=['l', 'lep', 'leptonic', 'h', 'had', 'hadronic'], default='h', help='Channel to process')
 parser.add_argument('--cat', '--categorical', action='store_true', help='Create categorical model')
 parser.add_argument('-s', '--signal', action='store', type=signal_multiplier, default='5', help='Number of signal events to use in training as a multiple of the number of background events. Value of 0 means use all signal events.')
 parser.add_argument('-n', '--name', action='store', default='test', help='Name of output plot.')
@@ -24,38 +24,41 @@ from ttHyy import *
 
 from sklearn import model_selection
 
+from keras import optimizers
 from keras.utils.np_utils import to_categorical
 
 from tabulate import tabulate
     
 def train_leptonic():
-    # load data
-    print('Loading data.')
 
-    branches = ['N_j_central30', 'm_HT_30/1000', 'm_mT/1000', 'm_pTlepEtmiss/1000']
-    selectionMC   = 'N_lep > 0 && N_j_btag30 > 0'
-    selectiondata = 'N_lep > 0 && N_j_btag30 == 0 && N_j_central30 > 0 && (ph_isTight1 == 0 || ph_iso1 == 0 || ph_isTight2 == 0 || ph_iso2 == 0)'
+    #branches = ['N_jet30_cen', 'HT_jet30/1000000', 'mt_lep_met/1000000', 'pt_lep_met/1000000', 'ph_cos_eta2_1', '(ph_pt1+ph_pt2)/1000000','pTt_yy/1000000']
+    branches = ['N_jet30_cen', 'HT_jet30/1000000', 'mt_lep_met/1000000', 'pt_lep_met/1000000']
 
-    sig = root2array('inputs_leptonic/ttHrw.root'       , treename='output;5', branches=branches, selection=selectionMC  )
-    bkg = root2array('inputs_leptonic/data_looserw.root', treename='output'  , branches=branches, selection=selectiondata)
+    # load training data
+    print('Loading training data.')
 
-    sig = utils.restrictSample(sig, len(bkg), args.signal)
+    train_selectionMC   = 'N_lep > 0 && N_bjet30_fixed70 >  0 && N_jet30_cen >= 0 &&  (flag_passedIso && flag_passedPID) && random_number > 1'
+    train_selectiondata = 'N_lep > 0 && N_bjet30_fixed70 == 0 && N_jet30_cen >  0 && !(flag_passedIso && flag_passedPID) && random_number > 1'
 
-    sig = rec2array(sig)
-    bkg = rec2array(bkg)
+    train_sig = root2array('all_inputs/ttH.root' , treename='output;5', branches=branches, selection=train_selectionMC  )
+    train_bkg = root2array('all_inputs/data.root', treename='output;1', branches=branches, selection=train_selectiondata)
+    train_sig = rec2array(train_sig)
+    train_bkg = rec2array(train_bkg)
+
+    #load testing data
+    test_selectionMC   = 'N_lep > 0 && N_bjet30_fixed70 >  0 && N_jet30_cen >= 0 &&  (flag_passedIso && flag_passedPID) && random_number < 1'
+    test_selectiondata = 'N_lep > 0 && N_bjet30_fixed70 == 0 && N_jet30_cen >  0 && !(flag_passedIso && flag_passedPID) && random_number < 1'
+
+    test_sig = root2array('all_inputs/ttH.root' , treename='output;5', branches=branches, selection=test_selectionMC  )
+    test_bkg = root2array('all_inputs/data.root', treename='output;1', branches=branches, selection=test_selectiondata)
+    test_sig = rec2array(test_sig)
+    test_bkg = rec2array(test_bkg)
 
     # split data into train, val, and test samples
-    print('Splitting data.')
-
-    train_sig, test_sig = model_selection.train_test_split(sig, test_size = 0.3, random_state=1234)
-    train_bkg, test_bkg = model_selection.train_test_split(bkg, test_size = 0.3, random_state=1234)
-    val_sig, test_sig = np.split(test_sig, [len(test_sig) / 2])
-    val_bkg, test_bkg = np.split(test_bkg, [len(test_bkg) / 2])
-
-    headers = ['Sample', 'Total', 'Training', 'Validation', 'Testing']
+    headers = ['Sample', 'Total', 'Training', 'Testing']
     sample_size_table = [
-        ['Signal'    , len(sig), len(train_sig), len(val_sig), len(test_sig)],
-        ['Background', len(bkg), len(train_bkg), len(val_bkg), len(test_bkg)],
+        ['Signal'    , len(train_sig)+len(test_sig), len(train_sig), len(test_sig)],
+        ['Background', len(train_bkg)+len(test_bkg), len(train_bkg), len(test_bkg)],
     ]
     print tabulate(sample_size_table, headers=headers, tablefmt='simple')
 
@@ -63,31 +66,38 @@ def train_leptonic():
     print('Organizing data for training.')
 
     train = np.concatenate((train_sig, train_bkg))
-    val   = np.concatenate((val_sig  , val_bkg  ))
     test  = np.concatenate((test_sig , test_bkg ))
 
     y_train_cat = np.concatenate((np.zeros(len(train_sig), dtype=np.uint8), np.ones(len(train_bkg), dtype=np.uint8)))
-    y_val_cat   = np.concatenate((np.zeros(len(val_sig)  , dtype=np.uint8), np.ones(len(val_bkg)  , dtype=np.uint8)))
     y_test_cat  = np.concatenate((np.zeros(len(test_sig) , dtype=np.uint8), np.ones(len(test_bkg) , dtype=np.uint8)))
 
     # train model
     print('Train model.')
-
-    model = models.model_shallow(4, True)
+    model = models.model_shallow(len(branches), True)
+    rms = optimizers.RMSprop(lr=0.001)
+    model.compile(optimizer=rms, loss='binary_crossentropy', metrics=['accuracy'])
+    #model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
+    history = model.fit(train, y_train_cat, epochs=200, batch_size=1000, validation_data=(test, y_test_cat))
     model.summary()
-    model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
-    model.fit(train, y_train_cat, epochs=20, batch_size=32, validation_data=(val, y_val_cat))
 
     # test model
     print('Test model.')
-
-    score = model.predict(test, batch_size=32)
+    score = model.predict(test, batch_size=1000)
 
     # plot ROC curve
     print('Plotting ROC curve.')
-
     pltname = 'ROC_curve_leptonic_' + args.name
-    utils.plotROC(y_test_cat, score, pltname, True)
+    utils.plotROC(y_test_cat, score, pltname, False)
+
+    #plot loss function
+    print('Plotting loss function')
+    pltname = 'Loss_function_leptonic_' + args.name
+    utils.plotLoss(history.history['loss'], history.history['val_loss'], pltname, False)
+
+    #plot accuracy function
+    print('Plotting accuracy function')
+    pltname = 'Accuracy_function_leptonic_' + args.name
+    utils.plotAcc(history.history['acc'], history.history['val_acc'], pltname, False)
 
     # save model
     if args.save:
@@ -96,134 +106,45 @@ def train_leptonic():
 
     return
 
-def train_leptonic_categorical():
-    # load data
-    print('Loading data.')
-
-    branches = ['N_j_central30', 'm_HT_30/1000', 'm_mT/1000', 'm_pTlepEtmiss/1000', 'm_njet_fwd']
-    selectionMC   = 'N_lep > 0 && N_j_btag30 > 0'
-    selectiondata = 'N_lep > 0 && N_j_btag30 == 0 && N_j_central30 > 0 && (ph_isTight1 == 0 || ph_iso1 == 0 || ph_isTight2 == 0 || ph_iso2 == 0)'
-
-    ttH  = root2array('inputs_leptonic/ttHrw.root'        , treename='output;5', branches=branches, selection=selectionMC  )
-    tHjb = root2array('inputs_leptonic/tHjbrw.root'       , treename='output'  , branches=branches, selection=selectionMC  )
-    tWH  = root2array('inputs_leptonic/tWHrw.root'        , treename='output'  , branches=branches, selection=selectionMC  )
-    bkg  = root2array('inputs_leptonic/data_looserw.root' , treename='output'  , branches=branches, selection=selectiondata)
-
-    tH = np.concatenate((tHjb, tWH))
-
-    leastevents = min(len(ttH), len(tH), len(bkg))
-
-    ttH = utils.restrictSample(ttH, leastevents, args.signal)
-    tH  = utils.restrictSample(tH , leastevents, args.signal)
-    bkg = utils.restrictSample(bkg, leastevents, args.signal)
-
-    ttH = rec2array(ttH)
-    tH  = rec2array(tH )
-    bkg = rec2array(bkg)
-
-    # split data into train, val, and test samples
-    print('Splitting data.')
-
-    train_ttH, test_ttH = model_selection.train_test_split(ttH, test_size = 0.3, random_state=1234)
-    train_tH , test_tH  = model_selection.train_test_split(tH , test_size = 0.3, random_state=1234)
-    train_bkg, test_bkg = model_selection.train_test_split(bkg, test_size = 0.3, random_state=1234)
-    val_ttH, test_ttH = np.split(test_ttH, [len(test_ttH) / 2])
-    val_tH , test_tH  = np.split(test_tH , [len(test_tH ) / 2])
-    val_bkg, test_bkg = np.split(test_bkg, [len(test_bkg) / 2])
-
-    headers = ['Sample', 'Total', 'Training', 'Validation', 'Testing']
-    sample_size_table = [
-        ['ttH'       , len(ttH), len(train_ttH), len(val_ttH), len(test_ttH)],
-        ['tH'        , len(tH ), len(train_tH ), len(val_tH ), len(test_tH )],
-        ['Background', len(bkg), len(train_bkg), len(val_bkg), len(test_bkg)],
-    ]
-    print tabulate(sample_size_table, headers=headers, tablefmt='simple')
-
-    # organize data for training
-    print('Organizing data for training.')
-
-    train = np.concatenate((train_ttH, train_tH, train_bkg))
-    val   = np.concatenate((val_ttH  , val_tH  , val_bkg  ))
-    test  = np.concatenate((test_ttH , test_tH , test_bkg ))
-
-    y_train = np.concatenate((
-        np.zeros(len(train_ttH), dtype=np.uint8),
-        np.ones(len(train_tH), dtype=np.uint8),
-        np.ones(len(train_bkg), dtype=np.uint8) + 1,
-    ))
-    y_val = np.concatenate((
-        np.zeros(len(val_ttH), dtype=np.uint8),
-        np.ones(len(val_tH), dtype=np.uint8),
-        np.ones(len(val_bkg), dtype=np.uint8) + 1,
-    ))
-    y_test = np.concatenate((
-        np.zeros(len(test_ttH), dtype=np.uint8),
-        np.ones(len(test_tH), dtype=np.uint8),
-        np.ones(len(test_bkg), dtype=np.uint8) + 1,
-    ))
-
-    y_train_cat = to_categorical(y_train, 3)
-    y_val_cat   = to_categorical(y_val  , 3)
-    y_test_cat  = to_categorical(y_test , 3)
-    
-    # train model
-    print('Train model.')
-
-    model = models.model_deep_categorical(5, 3, True)
-    model.summary()
-    model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
-    model.fit(train, y_train_cat, epochs=20, batch_size=32, validation_data=(val, y_val_cat))
-
-    # test model
-    print('Test model.')
-
-    score = model.predict_classes(test, batch_size=32)
-
-    # plot confusion matrix
-    print('Plotting confusion matrix.')
-
-    pltname = 'CM_leptonic_' + args.name
-    classes = ['ttH', 'tH', 'Background']
-    utils.plotCM(y_test, score, classes, pltname, True)
-
-    # save model
-    if args.save:
-        print('Saving model')
-        model.save_weights('models/model_leptonic_shallow_categorical.h5')
-
-    return
-
 def train_hadronic():
-    # load data
-    print('Loading data.')
 
-    branches = ['N_j_30', 'N_j_central30', 'N_j_btag30', 'm_HT_30/1000000', 'm_alljet/1000000', 'm_met/sqrt(m_HT_30)']
-    selectionMC   = 'N_lep == 0 && N_j_30 >= 3 && N_j_btag30 > 0'
-    selectiondata = 'N_lep == 0 && N_j_30 >= 3 && N_j_btag30 > 0 && (ph_isTight1 == 0 || ph_iso1 == 0 || ph_isTight2 == 0 || ph_iso2 == 0)'
+    #input branches
+    branches = ['N_jet30', 'N_jet30_cen', 'N_bjet30_fixed70', 'HT_jet30/1000000', 'mass_jet30/1000000']
+    #branches = ['N_jet30', 'N_jet30_cen', 'N_bjet30_fixed70', 'HT_jet30/1000000', 'mass_jet30/1000000', 'pTt_yy/1000000', 'ph_cos_eta2_1','(ph_pt1+ph_pt2)/1000000']
 
-    sig      = root2array('inputs_hadronic/ttH.root'             , treename='output;14', branches=branches, selection=selectionMC  )
-    bkg_data = root2array('inputs_hadronic/data_LooseLepton.root', treename='output'   , branches=branches, selection=selectiondata)
-    bkg_ggH  = root2array('inputs_hadronic/ggH.root'             , treename='output;8' , branches=branches, selection=selectionMC  )
+    # load training data
+    print('Loading training data.')
 
-    bkg = np.concatenate((bkg_data, bkg_ggH))
+    train_selectionMC   = 'N_lep == 0 && N_jet30 >= 3 && N_bjet30_fixed70 > 0 &&  (flag_passedIso && flag_passedPID) && random_number > 1'
+    train_selectiondata = 'N_lep == 0 && N_jet30 >= 3 && N_bjet30_fixed70 > 0 && !(flag_passedIso && flag_passedPID) && random_number > 1'
 
-    sig = utils.restrictSample(sig, len(bkg), args.signal)
+    train_bkg_data = root2array('all_inputs/data.root' , treename='output;1' , branches=branches, selection=train_selectiondata)
+    train_bkg_ggH  = root2array('all_inputs/ggH.root'  , treename='output;4' , branches=branches, selection=train_selectionMC  )
+    train_sig      = root2array('all_inputs/ttH.root'  , treename='output;5' , branches=branches, selection=train_selectionMC  )
+    train_bkg      = np.concatenate((train_bkg_data, train_bkg_ggH))
 
-    sig = rec2array(sig)
-    bkg = rec2array(bkg)
+    train_sig = rec2array(train_sig)
+    train_bkg = rec2array(train_bkg)
 
-    # split data into train, val, and test samples
-    print('Splitting data.')
+    # load testing data
+    print('Loading testing data.')
 
-    train_sig, test_sig = model_selection.train_test_split(sig, test_size = 0.3, random_state=1234)
-    train_bkg, test_bkg = model_selection.train_test_split(bkg, test_size = 0.3, random_state=1234)
-    val_sig, test_sig = np.split(test_sig, [len(test_sig) / 2])
-    val_bkg, test_bkg = np.split(test_bkg, [len(test_bkg) / 2])
+    test_selectionMC   = 'N_lep == 0 && N_jet30 >= 3 && N_bjet30_fixed70 > 0 &&  (flag_passedIso && flag_passedPID) && random_number < 1'
+    test_selectiondata = 'N_lep == 0 && N_jet30 >= 3 && N_bjet30_fixed70 > 0 && !(flag_passedIso && flag_passedPID) && random_number < 1'
 
-    headers = ['Sample', 'Total', 'Training', 'Validation', 'Testing']
+    test_bkg_data = root2array('all_inputs/data.root' , treename='output;1' , branches=branches, selection=test_selectiondata)
+    test_bkg_ggH  = root2array('all_inputs/ggH.root'  , treename='output;4' , branches=branches, selection=test_selectionMC  )
+    test_sig      = root2array('all_inputs/ttH.root'  , treename='output;5' , branches=branches, selection=test_selectionMC  )
+    test_bkg      = np.concatenate((test_bkg_data, test_bkg_ggH))
+
+    test_sig = rec2array(test_sig)
+    test_bkg = rec2array(test_bkg)
+
+    #table for easy number readout
+    headers = ['Sample', 'Total', 'Training', 'Testing']
     sample_size_table = [
-        ['Signal'    , len(sig), len(train_sig), len(val_sig), len(test_sig)],
-        ['Background', len(bkg), len(train_bkg), len(val_bkg), len(test_bkg)],
+        ['Signal'    , len(train_sig)+len(test_sig), len(train_sig), len(test_sig)],
+        ['Background', len(train_bkg)+len(test_bkg), len(train_bkg), len(test_bkg)],
     ]
     print tabulate(sample_size_table, headers=headers, tablefmt='simple')
 
@@ -231,31 +152,39 @@ def train_hadronic():
     print('Organizing data for training.')
 
     train = np.concatenate((train_sig, train_bkg))
-    val   = np.concatenate((val_sig  , val_bkg  ))
     test  = np.concatenate((test_sig , test_bkg ))
 
     y_train_cat = np.concatenate((np.zeros(len(train_sig), dtype=np.uint8), np.ones(len(train_bkg), dtype=np.uint8)))
-    y_val_cat   = np.concatenate((np.zeros(len(val_sig)  , dtype=np.uint8), np.ones(len(val_bkg)  , dtype=np.uint8)))
     y_test_cat  = np.concatenate((np.zeros(len(test_sig) , dtype=np.uint8), np.ones(len(test_bkg) , dtype=np.uint8)))
 
     # train model
     print('Train model.')
 
-    model = models.model_shallow(6, True)
+    model = models.model_shallow(len(branches), True)
     model.summary()
-    model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
-    model.fit(train, y_train_cat, epochs=100, batch_size=32, validation_data=(val, y_val_cat))
+    rms = optimizers.RMSprop(lr=0.0001)
+    model.compile(optimizer=rms, loss='binary_crossentropy', metrics=['accuracy'])
+    #model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
+    history = model.fit(train, y_train_cat, epochs=200, batch_size=1000, validation_data=(test, y_test_cat))
 
     # test model
     print('Test model.')
-
-    score = model.predict(test, batch_size=32)
+    score = model.predict(test, batch_size=1000)
 
     # plot ROC curve
     print('Plotting ROC curve.')
-
     pltname = 'ROC_curve_hadronic_' + args.name
-    utils.plotROC(y_test_cat, score, pltname, True)
+    utils.plotROC(y_test_cat, score, pltname, False)
+
+    #plot loss function
+    print('Plotting loss function')
+    pltname = 'Loss_function_hadronic_' + args.name
+    utils.plotLoss(history.history['loss'], history.history['val_loss'], pltname, False)
+
+    #plot accuracy function
+    print('Plotting accuracy function')
+    pltname = 'Accuracy_function_hadronic_' + args.name
+    utils.plotAcc(history.history['acc'], history.history['val_acc'], pltname, False)
 
     # save model
     if args.save:

@@ -43,7 +43,40 @@ def plotROC(y_test, score, filename, show=False):
     plt.savefig('plots/' + filename + '.eps')
     
     if show: plt.show()
+    
+    plt.clf()
+    return
 
+def plotLoss(loss, val_loss, filename, show=False):
+
+    plt.plot(loss, color='black', label='Training Set')
+    plt.plot(val_loss, color='red', label='Validation Set')
+    plt.xlabel('Number of epochs')
+    plt.ylabel('Loss')
+    plt.title('Loss Function')
+    plt.legend(loc='upper right', framealpha=0.0)
+    #plt.ylim(0.1, 1)
+    plt.savefig('plots/' + filename + '.png')
+    plt.savefig('plots/' + filename + '.eps')
+
+    if show: plt.show()
+    plt.clf()
+    return
+
+def plotAcc(acc, val_acc, filename, show=False):
+
+    plt.plot(acc, color='black', label='Training Set')
+    plt.plot(val_acc, color='red', label='Validation Set')
+    plt.xlabel('Number of epochs')
+    plt.ylabel('Accuracy')
+    plt.title('Accuracy Function')
+    plt.legend(loc='upper left', framealpha=0.0)
+
+    plt.savefig('plots/' + filename + '.png')
+    plt.savefig('plots/' + filename + '.eps')
+
+    if show: plt.show()
+    plt.clf()
     return
 
 def plotCM(y_test, score, classes, filename, show=False):
