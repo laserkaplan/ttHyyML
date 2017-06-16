@@ -21,32 +21,10 @@ def restrictSample(sample, nbkg, signal):
 
     return sample
 
-def plotROC(y_test, score, filename, show=False):
-    fpr, tpr, _ = roc_curve(y_test, score)
-    roc_auc = auc(fpr, tpr)
-
-    fpr = 1.0 - fpr
-
-    plt.grid(color='gray', linestyle='--', linewidth=1)
-    plt.plot(tpr, fpr, label='Shallow NN, area = %0.2f' % roc_auc)
-    plt.plot([0, 1], [1, 0], linestyle='--', color='black', label='Luck')
-    plt.xlabel('Signal acceptance')
-    plt.ylabel('Background rejection')
-    plt.title('Receiver operating characteristic')
-    plt.xlim(0, 1)
-    plt.ylim(0, 1)
-    plt.xticks(np.arange(0, 1, 0.1))
-    plt.yticks(np.arange(0, 1, 0.1))
-    plt.legend(loc='lower left', framealpha=1.0)
-
-    plt.savefig('plots/' + filename + '.png')
-    plt.savefig('plots/' + filename + '.eps')
-    
-    if show: plt.show()
-
-    return
-
 def plotCM(y_test, score, classes, filename, show=False):
+    '''
+    Plot confusion matrix for given test sample and classes
+    '''
     cm = confusion_matrix(y_test, score)
     diag = float(np.trace(cm)) / float(np.sum(cm))
     cm = cm.T.astype('float') / cm.T.sum(axis=0)
@@ -75,4 +53,69 @@ def plotCM(y_test, score, classes, filename, show=False):
 
     if show: plt.show()
 
+    return
+
+def plotROC(y_test, score, filename, show=False):
+    '''
+    Plot ROC curve for a given test sample
+    '''
+    fpr, tpr, _ = roc_curve(y_test, score)
+    roc_auc = auc(fpr, tpr)
+
+    fpr = 1.0 - fpr
+
+    plt.grid(color='gray', linestyle='--', linewidth=1)
+    plt.plot(tpr, fpr, label='Shallow NN, area = %0.2f' % roc_auc)
+    plt.plot([0, 1], [1, 0], linestyle='--', color='black', label='Luck')
+    plt.xlabel('Signal acceptance')
+    plt.ylabel('Background rejection')
+    plt.title('Receiver operating characteristic')
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
+    plt.xticks(np.arange(0, 1, 0.1))
+    plt.yticks(np.arange(0, 1, 0.1))
+    plt.legend(loc='lower left', framealpha=1.0)
+
+    plt.savefig('plots/' + filename + '.png')
+    plt.savefig('plots/' + filename + '.eps')
+    
+    if show: plt.show()
+    
+    plt.clf()
+    return
+
+def plotLoss(loss, val_loss, filename, show=False):
+    '''
+    Plot loss function for training and validation samples
+    '''
+    plt.plot(loss, color='black', label='Training Set')
+    plt.plot(val_loss, color='red', label='Validation Set')
+    plt.xlabel('Number of epochs')
+    plt.ylabel('Loss')
+    plt.title('Loss Function')
+    plt.legend(loc='upper right', framealpha=0.0)
+    #plt.ylim(0.1, 1)
+    plt.savefig('plots/' + filename + '.png')
+    plt.savefig('plots/' + filename + '.eps')
+
+    if show: plt.show()
+    plt.clf()
+    return
+
+def plotAcc(acc, val_acc, filename, show=False):
+    '''
+    Plot acceptance for given training and validation samples
+    '''
+    plt.plot(acc, color='black', label='Training Set')
+    plt.plot(val_acc, color='red', label='Validation Set')
+    plt.xlabel('Number of epochs')
+    plt.ylabel('Accuracy')
+    plt.title('Accuracy Function')
+    plt.legend(loc='upper left', framealpha=0.0)
+
+    plt.savefig('plots/' + filename + '.png')
+    plt.savefig('plots/' + filename + '.eps')
+
+    if show: plt.show()
+    plt.clf()
     return
