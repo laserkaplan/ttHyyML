@@ -241,10 +241,12 @@ def train_hadronic():
     # train model
     print('Train model.')
 
-    model = models.model_shallow(6, True)
+    model = models.model_shallow(len(branches), True)
     model.summary()
-    model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
-    model.fit(train, y_train_cat, epochs=100, batch_size=32, validation_data=(val, y_val_cat))
+    rms = optimizers.RMSprop(lr=0.0001)
+    model.compile(optimizer=rms, loss='binary_crossentropy', metrics=['accuracy'])
+    #model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
+    history = model.fit(train, y_train_cat, epochs=100, batch_size=32, validation_data=(val, y_val_cat))
 
     # test model
     print('Test model.')
@@ -255,7 +257,17 @@ def train_hadronic():
     print('Plotting ROC curve.')
 
     pltname = 'ROC_curve_hadronic_' + args.name
-    utils.plotROC(y_test_cat, score, pltname, True)
+    utils.plotROC(y_test_cat, score, pltname, False)
+
+    #plot loss function
+    print('Plotting loss function')
+    pltname = 'Loss_function_hadronic_' + args.name
+    utils.plotLoss(history.history['loss'], history.history['val_loss'], pltname, False)
+
+    #plot accuracy function
+    print('Plotting accuracy function')
+    pltname = 'Accuracy_function_hadronic_' + args.name
+    utils.plotAcc(history.history['acc'], history.history['val_acc'], pltname, False)
 
     # save model
     if args.save:
