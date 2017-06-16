@@ -24,6 +24,7 @@ from ttHyy import *
 
 from sklearn import model_selection
 
+from keras.optimizers import RMSprop
 from keras.utils.np_utils import to_categorical
 
 from tabulate import tabulate
@@ -32,13 +33,19 @@ def train_leptonic():
     # load data
     print('Loading data.')
 
-    branches = ['N_j_central30', 'm_HT_30/1000', 'm_mT/1000', 'm_pTlepEtmiss/1000']
+    branches = ['N_j_central30', 'm_HT_30', 'm_mT', 'm_pTlepEtmiss']
     selectionMC   = 'N_lep > 0 && N_j_btag30 > 0'
     selectiondata = 'N_lep > 0 && N_j_btag30 == 0 && N_j_central30 > 0 && (ph_isTight1 == 0 || ph_iso1 == 0 || ph_isTight2 == 0 || ph_iso2 == 0)'
 
     sig = root2array('inputs_leptonic/ttHrw.root'       , treename='output;5', branches=branches, selection=selectionMC  )
     bkg = root2array('inputs_leptonic/data_looserw.root', treename='output'  , branches=branches, selection=selectiondata)
 
+    # scale branches
+    branchesToScale = ['m_HT_30', 'm_mT', 'm_pTlepEtmiss']
+    sig = utils.scaleSample(sig, branchesToScale)
+    bkg = utils.scaleSample(bkg, branchesToScale)
+
+    # construct records
     sig = utils.restrictSample(sig, len(bkg), args.signal)
 
     sig = rec2array(sig)
@@ -197,7 +204,7 @@ def train_hadronic():
     # load data
     print('Loading data.')
 
-    branches = ['N_j_30', 'N_j_central30', 'N_j_btag30', 'm_HT_30/1000000', 'm_alljet/1000000', 'm_met/sqrt(m_HT_30)']
+    branches = ['N_j_30', 'N_j_central30', 'N_j_btag30', 'm_HT_30', 'm_alljet', 'm_met/sqrt(m_HT_30)']
     selectionMC   = 'N_lep == 0 && N_j_30 >= 3 && N_j_btag30 > 0'
     selectiondata = 'N_lep == 0 && N_j_30 >= 3 && N_j_btag30 > 0 && (ph_isTight1 == 0 || ph_iso1 == 0 || ph_isTight2 == 0 || ph_iso2 == 0)'
 
@@ -206,7 +213,13 @@ def train_hadronic():
     bkg_ggH  = root2array('inputs_hadronic/ggH.root'             , treename='output;8' , branches=branches, selection=selectionMC  )
 
     bkg = np.concatenate((bkg_data, bkg_ggH))
+    
+    # scale branches
+    branchesToScale = ['m_HT_30', 'm_alljet', 'm_met/sqrt(m_HT_30)']
+    sig = utils.scaleSample(sig, branchesToScale)
+    bkg = utils.scaleSample(bkg, branchesToScale)
 
+    #construct records
     sig = utils.restrictSample(sig, len(bkg), args.signal)
 
     sig = rec2array(sig)
@@ -243,9 +256,9 @@ def train_hadronic():
 
     model = models.model_shallow(len(branches), True)
     model.summary()
-    rms = optimizers.RMSprop(lr=0.0001)
-    model.compile(optimizer=rms, loss='binary_crossentropy', metrics=['accuracy'])
     #model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
+    rms = RMSprop(lr=0.0001)
+    model.compile(optimizer=rms, loss='binary_crossentropy', metrics=['accuracy'])
     history = model.fit(train, y_train_cat, epochs=100, batch_size=32, validation_data=(val, y_val_cat))
 
     # test model
