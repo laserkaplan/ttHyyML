@@ -71,7 +71,7 @@ def process_leptonic():
         'flag_passedPID',
         'weight',
     ]
-    inX = rec2array(root2array('all_inputs/%s.root' % args.input, treename=args.tree, branches=branches))
+    inX = rec2array(root2array('inputs_leptonic/%s.root' % args.input, treename=args.tree, branches=branches))
     score = model.predict(inX[:, :4])
     inX = np.column_stack((inX, score))
 
@@ -147,7 +147,7 @@ def process_hadronic():
         'flag_passedPID',
         'weight',
     ]
-    inX = rec2array(root2array('all_inputs/%s.root' % args.input, treename=args.tree, branches=branches))
+    inX = rec2array(root2array('inputs_hadronic/%s.root' % args.input, treename=args.tree, branches=branches))
     score = model.predict(inX[:, :5])
     inX = np.column_stack((inX, score))
 
