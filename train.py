@@ -26,6 +26,7 @@ from sklearn import model_selection
 
 from keras.optimizers import RMSprop
 from keras.utils.np_utils import to_categorical
+from keras.callbacks import EarlyStopping
 
 from tabulate import tabulate
     
@@ -83,7 +84,8 @@ def train_leptonic():
     model = models.model_shallow(4, True)
     model.summary()
     model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
-    model.fit(train, y_train_cat, epochs=20, batch_size=32, validation_data=(val, y_val_cat))
+    es = EarlyStopping(monitor='val_loss', patience=10)
+    model.fit(train, y_train_cat, epochs=100, batch_size=32, validation_data=(val, y_val_cat), callbacks=[es])
 
     # test model
     print('Test model.')
@@ -179,7 +181,8 @@ def train_leptonic_categorical():
     model = models.model_deep_categorical(5, 3, True)
     model.summary()
     model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
-    model.fit(train, y_train_cat, epochs=20, batch_size=32, validation_data=(val, y_val_cat))
+    es = EarlyStopping(monitor='val_loss', patience=10)
+    model.fit(train, y_train_cat, epochs=20, batch_size=32, validation_data=(val, y_val_cat), callbakcs=[es])
 
     # test model
     print('Test model.')
@@ -259,7 +262,8 @@ def train_hadronic():
     #model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
     rms = RMSprop(lr=0.0001)
     model.compile(optimizer=rms, loss='binary_crossentropy', metrics=['accuracy'])
-    history = model.fit(train, y_train_cat, epochs=100, batch_size=32, validation_data=(val, y_val_cat))
+    es = EarlyStopping(monitor='val_loss', patience=10)
+    history = model.fit(train, y_train_cat, epochs=100, batch_size=32, validation_data=(val, y_val_cat), callbacks=[es])
 
     # test model
     print('Test model.')
