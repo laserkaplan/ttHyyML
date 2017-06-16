@@ -3,7 +3,7 @@ from keras.layers import Dense, Activation, Dropout
 
 def model_shallow(ndim, doDropout=False):
     model = Sequential()
-    model.add(Dense(100, input_dim = ndim))
+    model.add(Dense(32, input_dim = ndim))
     model.add(Activation('relu'))
     if doDropout: model.add(Dropout(0.2))
     model.add(Dense(1))
