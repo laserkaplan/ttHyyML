@@ -4,11 +4,21 @@ import ROOT
 
 import numpy as np
 
+from sklearn import preprocessing
 from sklearn.metrics import roc_curve, auc, confusion_matrix
 
 import matplotlib.pyplot as plt
 
 import itertools
+
+def scaleSample(sample, branches):
+    '''
+    Scale selected branches from sample for easier fitting
+    '''
+    for b in branches:
+        sample[b] = preprocessing.scale(sample[b].reshape(-1,1)).reshape(-1)
+
+    return sample
 
 def restrictSample(sample, nbkg, signal):
     '''
@@ -53,6 +63,7 @@ def plotCM(y_test, score, classes, filename, show=False):
 
     if show: plt.show()
 
+    plt.clf()
     return
 
 def plotROC(y_test, score, filename, show=False):
@@ -99,6 +110,7 @@ def plotLoss(loss, val_loss, filename, show=False):
     plt.savefig('plots/' + filename + '.eps')
 
     if show: plt.show()
+    
     plt.clf()
     return
 
@@ -117,5 +129,22 @@ def plotAcc(acc, val_acc, filename, show=False):
     plt.savefig('plots/' + filename + '.eps')
 
     if show: plt.show()
+    
+    plt.clf()
+    return
+
+def plotVariable(var, varlabel, filename, show=False):
+    '''
+    Plot distribution of input variable
+    '''
+    plt.hist(var, color='green', log=True, bins=100)
+    plt.xlabel(varlabel)
+    plt.ylabel('AU')
+
+    plt.savefig('plots/' + filename + '.png')
+    plt.savefig('plots/' + filename + '.eps')
+
+    if show: plt.show()
+
     plt.clf()
     return
