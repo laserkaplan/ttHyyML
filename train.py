@@ -81,7 +81,7 @@ def train_leptonic():
     # train model
     print('Train model.')
 
-    model = models.model_shallow(4, True)
+    model = models.model_shallow(4)
     model.summary()
     model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
     es = EarlyStopping(monitor='val_loss', patience=10)
@@ -178,7 +178,7 @@ def train_leptonic_categorical():
     # train model
     print('Train model.')
 
-    model = models.model_deep_categorical(5, 3, True)
+    model = models.model_deep_categorical(5, 3)
     model.summary()
     model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
     es = EarlyStopping(monitor='val_loss', patience=10)
@@ -257,7 +257,7 @@ def train_hadronic():
     # train model
     print('Train model.')
 
-    model = models.model_shallow(len(branches), True)
+    model = models.model_shallow(len(branches))
     model.summary()
     #model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
     rms = RMSprop(lr=0.0001)
