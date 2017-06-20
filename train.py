@@ -26,13 +26,14 @@ from sklearn import model_selection
 
 from keras import optimizers
 from keras.utils.np_utils import to_categorical
+from keras.callbacks import EarlyStopping
 
 from tabulate import tabulate
     
 def train_leptonic():
 
     #branches = ['N_jet30_cen', 'HT_jet30/1000000', 'mt_lep_met/1000000', 'pt_lep_met/1000000', 'ph_cos_eta2_1', '(ph_pt1+ph_pt2)/1000000','pTt_yy/1000000']
-    branches = ['N_jet30_cen', 'HT_jet30/1000000', 'mt_lep_met/1000000', 'pt_lep_met/1000000']
+    branches = ['N_jet30_cen', 'HT_jet30/1000000', 'mt_lep_met/1000000', 'pt_lep_met/1000000', '(ph_pt1+ph_pt2)/1000000.']
 
     # load training data
     print('Loading training data.')
@@ -74,10 +75,10 @@ def train_leptonic():
     # train model
     print('Train model.')
     model = models.model_shallow(len(branches), True)
-    rms = optimizers.RMSprop(lr=0.001)
+    rms = optimizers.RMSprop(lr=0.0001)
     model.compile(optimizer=rms, loss='binary_crossentropy', metrics=['accuracy'])
-    #model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
-    history = model.fit(train, y_train_cat, epochs=200, batch_size=1000, validation_data=(test, y_test_cat))
+    early_stopping = EarlyStopping(monitor='val_loss', patience=10)
+    history = model.fit(train, y_train_cat, epochs=1000, batch_size=32, validation_data=(test, y_test_cat), callbacks=[early_stopping])
     model.summary()
 
     # test model
@@ -109,7 +110,7 @@ def train_leptonic():
 def train_hadronic():
 
     #input branches
-    branches = ['N_jet30', 'N_jet30_cen', 'N_bjet30_fixed70', 'HT_jet30/1000000', 'mass_jet30/1000000']
+    branches = ['N_jet30', 'N_jet30_cen', 'N_bjet30_fixed70', 'HT_jet30/1000000.', 'mass_jet30/1000000.', 'ph_delt_eta2_1/3.']
     #branches = ['N_jet30', 'N_jet30_cen', 'N_bjet30_fixed70', 'HT_jet30/1000000', 'mass_jet30/1000000', 'pTt_yy/1000000', 'ph_cos_eta2_1','(ph_pt1+ph_pt2)/1000000']
 
     # load training data
@@ -161,11 +162,11 @@ def train_hadronic():
     print('Train model.')
 
     model = models.model_shallow(len(branches), True)
-    model.summary()
     rms = optimizers.RMSprop(lr=0.0001)
     model.compile(optimizer=rms, loss='binary_crossentropy', metrics=['accuracy'])
-    #model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
-    history = model.fit(train, y_train_cat, epochs=200, batch_size=1000, validation_data=(test, y_test_cat))
+    model.summary()
+    early_stopping = EarlyStopping(monitor='val_loss', patience=10)
+    history = model.fit(train, y_train_cat, epochs=1000, batch_size=1000, validation_data=(test, y_test_cat), callbacks=[early_stopping])
 
     # test model
     print('Test model.')
