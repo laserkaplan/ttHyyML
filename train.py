@@ -103,7 +103,8 @@ def train_leptonic():
     # save model
     if args.save:
         print('Saving model')
-        model.save_weights('models/model_leptonic_shallow.h5')
+        mdlname = 'models/model_leptonic_shallow_'+args.name+'.h5'
+        model.save_weights(mdlname)
 
     return
 
@@ -190,7 +191,8 @@ def train_hadronic():
     # save model
     if args.save:
         print('Saving model')
-        model.save_weights('models/model_hadronic_shallow.h5')
+        mdlname = 'models/model_hadronic_shallow_'+args.name+'.h5'
+        model.save_weights(mdlname)
 
     return
 
