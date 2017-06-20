@@ -4,19 +4,33 @@ import ROOT
 
 import numpy as np
 
-from sklearn import preprocessing
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import roc_curve, auc, confusion_matrix
 
 import matplotlib.pyplot as plt
 
 import itertools
 
-def scaleSample(sample, branches):
+def getScalers(dataToScale, branches):
+    '''
+    Get dict of StandardScalers for each branch
+    '''
+    scalers = {}
+
+    for b in branches:
+        s = StandardScaler()
+        s.fit(dataToScale[b])
+        scalers[b] = s
+        pass
+
+    return scalers
+
+def scaleSample(sample, branches, scalers):
     '''
     Scale selected branches from sample for easier fitting
     '''
     for b in branches:
-        sample[b] = preprocessing.scale(sample[b].reshape(-1,1)).reshape(-1)
+        sample[b] = scalers[b].transform(sample[b])
 
     return sample
 

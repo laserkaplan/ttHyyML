@@ -34,7 +34,7 @@ def train_leptonic():
     # load data
     print('Loading data.')
 
-    branches = ['N_j_central30', 'm_HT_30', 'm_mT', 'm_pTlepEtmiss']
+    branches = ['N_j_central30', 'log(m_HT_30)', 'log(m_mT)', 'log(m_pTlepEtmiss)']
     selectionMC   = 'N_lep > 0 && N_j_btag30 > 0'
     selectiondata = 'N_lep > 0 && N_j_btag30 == 0 && N_j_central30 > 0 && (ph_isTight1 == 0 || ph_iso1 == 0 || ph_isTight2 == 0 || ph_iso2 == 0)'
 
@@ -42,9 +42,11 @@ def train_leptonic():
     bkg = root2array('inputs_leptonic/data_looserw.root', treename='output'  , branches=branches, selection=selectiondata)
 
     # scale branches
-    branchesToScale = ['m_HT_30', 'm_mT', 'm_pTlepEtmiss']
-    sig = utils.scaleSample(sig, branchesToScale)
-    bkg = utils.scaleSample(bkg, branchesToScale)
+    branchesToScale = ['log(m_HT_30)', 'log(m_mT)', 'log(m_pTlepEtmiss)']
+    dataToScale = np.concatenate((sig, bkg))
+    scalers = utils.getScalers(dataToScale, branchesToScale)
+    sig = utils.scaleSample(sig, branchesToScale, scalers)
+    bkg = utils.scaleSample(bkg, branchesToScale, scalers)
 
     # construct records
     sig = utils.restrictSample(sig, len(bkg), args.signal)
@@ -207,7 +209,7 @@ def train_hadronic():
     # load data
     print('Loading data.')
 
-    branches = ['N_j_30', 'N_j_central30', 'N_j_btag30', 'm_HT_30', 'm_alljet', 'm_met/sqrt(m_HT_30)']
+    branches = ['N_j_30', 'N_j_central30', 'N_j_btag30', 'log(m_HT_30)', 'log(m_alljet)', 'log(m_met/sqrt(m_HT_30))']
     selectionMC   = 'N_lep == 0 && N_j_30 >= 3 && N_j_btag30 > 0'
     selectiondata = 'N_lep == 0 && N_j_30 >= 3 && N_j_btag30 > 0 && (ph_isTight1 == 0 || ph_iso1 == 0 || ph_isTight2 == 0 || ph_iso2 == 0)'
 
@@ -218,9 +220,11 @@ def train_hadronic():
     bkg = np.concatenate((bkg_data, bkg_ggH))
     
     # scale branches
-    branchesToScale = ['m_HT_30', 'm_alljet', 'm_met/sqrt(m_HT_30)']
-    sig = utils.scaleSample(sig, branchesToScale)
-    bkg = utils.scaleSample(bkg, branchesToScale)
+    branchesToScale = ['log(m_HT_30)', 'log(m_alljet)', 'log(m_met/sqrt(m_HT_30))']
+    dataToScale = np.concatenate((sig, bkg))
+    scalers = utils.getScalers(dataToScale, branchesToScale)
+    sig = utils.scaleSample(sig, branchesToScale, scalers)
+    bkg = utils.scaleSample(bkg, branchesToScale, scalers)
 
     #construct records
     sig = utils.restrictSample(sig, len(bkg), args.signal)
