@@ -33,7 +33,7 @@ from tabulate import tabulate
 def train_leptonic():
 
     #branches = ['N_jet30_cen', 'HT_jet30/1000000', 'mt_lep_met/1000000', 'pt_lep_met/1000000', 'ph_cos_eta2_1', '(ph_pt1+ph_pt2)/1000000','pTt_yy/1000000']
-    branches = ['N_jet30_cen', 'HT_jet30/1000000', 'mt_lep_met/1000000', 'pt_lep_met/1000000', '(ph_pt1+ph_pt2)/1000000.']
+    branches = ['N_jet30_cen', 'HT_jet30/1000000', 'mt_lep_met/1000000', 'pt_lep_met/1000000','ph_delt_eta2_1/3']
 
     # load training data
     print('Loading training data.')
