@@ -41,6 +41,7 @@ def restrictSample(sample, nbkg, signal):
     if signal == 0 or len(sample) < signal * nbkg:
         pass
     else:
+        np.random.seed(1234)
         if len(sample.shape) == 1: sample = np.random.choice(sample, size=int(signal * nbkg))
         else: sample = sample[np.random.randint(sample.shape[0], size=int(signal * nbkg)), :]
 
