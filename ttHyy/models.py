@@ -1,5 +1,5 @@
 from keras.models import Model
-from keras.layers import Input, Dense, Activation, Dropout
+from keras.layers import Input, Dense, Activation, Dropout, Masking, LSTM
 
 def model_shallow(ndim):
     m_in = Input(shape=(ndim,))
@@ -33,6 +33,19 @@ def model_deep_categorical(ndim, nclasses):
     m = Dropout(0.2)(m)
     m = Dense(nclasses)(m)
     m_out = Activation('softmax')(m)
+
+    model = Model(inputs=m_in, outputs=m_out)
+    return model
+
+def model_rnn(indata):
+    m_in = Input(shape=indata[0].shape)
+    m = Masking(mask_value=-999)(m_in)
+    m = LSTM(32)(m)
+    m = Dense(64)(m)
+    m = Activation('relu')(m)
+    m = Dropout(0.2)(m)
+    m = Dense(1)(m)
+    m_out = Activation('sigmoid')(m)
 
     model = Model(inputs=m_in, outputs=m_out)
     return model
