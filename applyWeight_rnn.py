@@ -6,7 +6,10 @@ parser.add_argument('-i', '--input', action='store', required=True, help='Name o
 parser.add_argument('-n', '--name', action='store', required=True, help='Name to be appended to output file') 
 args = parser.parse_args()
 
+import math
+
 import ROOT
+from root_numpy import root2array
 
 from array import array
 
@@ -18,9 +21,30 @@ from sklearn.preprocessing import StandardScaler
 
 from keras import models
 
+def process_photons(photons):
+    ptts = []
+
+    for p in photons:
+        tlv1 = ROOT.TLorentzVector()
+        tlv1.SetPtEtaPhiE(p['photon_1'][0], p['photon_1'][1], p['photon_1'][2], p['photon_1'][3])
+        tlv2 = ROOT.TLorentzVector()
+        tlv2.SetPtEtaPhiE(p['photon_2'][0], p['photon_2'][1], p['photon_2'][2], p['photon_2'][3])
+        ptts.append(math.fabs(tlv1.Px() * tlv2.Py() - tlv1.Py() * tlv2.Px()) / (tlv1 - tlv2).Pt() * 2.0)
+        pass
+
+    return np.array(ptts)
+
 def process_hadronic():
     # load model
-    model = models.load_model('models/model_hadronic_rnn_temp.h5')
+    model = models.load_model('models/model_hadronic_rnn_with_photons_temp.h5')
+    
+    # get photons
+    branches = ['photon_1', 'photon_2']
+    selection   = 'N_lep == 0 && N_jet30 >= 3 && N_bjet30_fixed70 > 0'
+
+    photons = root2array('inputs/%s_RNN.root' % args.input, branches=branches, selection=selection)
+
+    ptts = process_photons(photons)
 
     # open file and get tree
     infile = ROOT.TFile.Open('inputs/%s_RNN.root' % args.input)
@@ -71,11 +95,13 @@ def process_hadronic():
     Es[mask] = scalers['E'].transform(Es[mask])
     jets[:, :, 3] = Es.reshape(-1, 9)
 
-    score = model.predict(jets)
+    photons = scalers['ptt'].transform(ptts)
 
-    if (intree.GetEntries('N_lep == 0 && N_jet30 >= 3 && N_bjet30_fixed70 > 0') != len(jets)):
+    if (intree.GetEntries('N_lep == 0 && N_jet30 >= 3 && N_bjet30_fixed70 > 0') != len(jets) and intree.GetEntries('N_lep == 0 && N_jet30 >= 3 && N_bjet30_fixed70 > 0') != len(photons)):
         print('Not the same number of events! Exiting!!!')
         return
+
+    score = model.predict([jets, photons])
 
     j = 0
     for i in range(intree.GetEntries()):
