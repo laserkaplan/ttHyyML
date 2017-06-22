@@ -3,6 +3,8 @@
 *.eps
 *.root
 *.h5
+*.npy
 ve/
+inputs
 inputs_leptonic
 inputs_hadronic
