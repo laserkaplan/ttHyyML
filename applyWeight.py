@@ -22,7 +22,7 @@ from ttHyy import models
 
 def process_leptonic():
     # load model
-    model = models.model_shallow(5, True)
+    model = models.model_shallow(6, True)
     model.load_weights(args.model)
 
     # open file and get tree
@@ -63,9 +63,9 @@ def process_leptonic():
         'HT_jet30/1000000',
         'mt_lep_met/1000000',
         'pt_lep_met/1000000',
-        'ph_delt_eta2_1/3',
         'pTt_yy/1000000',
-        '(ph_pt1+ph_pt2)/1000000',
+        'ph_delt_eta2_1/2',
+        'dR_jj_closest_jet30/3',
         'mass_yy',
         'N_bjet30_fixed70',
         'N_lep',
@@ -75,7 +75,7 @@ def process_leptonic():
         'random_number'
     ]
     inX = rec2array(root2array('all_inputs/%s.root' % args.input, treename=args.tree, branches=branches))
-    score = model.predict(inX[:, :5])
+    score = model.predict(inX[:, :6])
     inX = np.column_stack((inX, score))
 
     # loop over input tree and fill new tree
@@ -102,7 +102,7 @@ def process_leptonic():
 
 def process_hadronic():
     # load model
-    model = models.model_shallow(6, True)
+    model = models.model_shallow(8, True)
     model.load_weights(args.model)
 
     # open file and get tree
@@ -144,9 +144,9 @@ def process_hadronic():
         'N_bjet30_fixed70',
         'HT_jet30/1000000',
         'mass_jet30/1000000',
+        'pTt_yy/1000000',
         'ph_delt_eta2_1/3.',
-        'pTt_yy',
-        '(ph_pt1+ph_pt2)/1000000',
+        'sigmet_TST/3',
         'mass_yy',
         'N_lep',
         'flag_passedIso',
@@ -155,7 +155,7 @@ def process_hadronic():
         'random_number'
     ]
     inX = rec2array(root2array('all_inputs/%s.root' % args.input, treename=args.tree, branches=branches))
-    score = model.predict(inX[:, :6])
+    score = model.predict(inX[:, :8])
     inX = np.column_stack((inX, score))
 
     # loop over input tree and fill new tree
