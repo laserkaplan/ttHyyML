@@ -140,6 +140,15 @@ def train_hadronic():
     test_sig = rec2array(test_sig)
     test_bkg = rec2array(test_bkg)
 
+    # scale branches
+    #branchesToScale = ['log(HT_jet30)', 'log(mass_jet30)', 'log(pTt_yy)', 'ph_delt_eta2_1/2', 'sigmet_TST/3']
+    #dataToScale     = np.concatenate((train_sig, test_sig, train_bkg, test_bkg))
+    #scalers         = utils.getScalers(dataToScale, branchesToScale)
+    #train_sig       = utils.scaleSample(train_sig,  branchesToScale, scalers)
+    #train_bkg       = utils.scaleSample(train_bkg,  branchesToScale, scalers)
+    #test_sig        = utils.scaleSample(test_sig,   branchesToScale, scalers)
+    #test_bkg        = utils.scaleSample(test_bkg,   branchesToScale, scalers)
+
     #table for easy number readout
     headers = ['Sample', 'Total', 'Training', 'Testing']
     sample_size_table = [
@@ -161,11 +170,12 @@ def train_hadronic():
     print('Train model.')
 
     model = models.model_shallow(len(branches), True)
-    rms = optimizers.RMSprop(lr=0.001)
-    model.compile(optimizer=rms, loss='binary_crossentropy', metrics=['accuracy'])
+    #rms   = optimizers.RMSprop(lr=0.001)
+    Nadam  = optimizers.Nadam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, schedule_decay=0.004)
+    model.compile(optimizer=Nadam, loss='binary_crossentropy', metrics=['accuracy'])
     model.summary()
     early_stopping = EarlyStopping(monitor='val_loss', patience=10)
-    history = model.fit(train, y_train_cat, epochs=1000, batch_size=1000, validation_data=(test, y_test_cat), callbacks=[early_stopping])
+    history = model.fit(train, y_train_cat, epochs=10000, batch_size=1000, validation_data=(test, y_test_cat), callbacks=[early_stopping])
 
     # test model
     print('Test model.')
