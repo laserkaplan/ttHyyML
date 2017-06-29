@@ -2,8 +2,9 @@ import os
 
 import argparse
 parser = argparse.ArgumentParser()
-parser.add_argument('-n', '--name', action='store', required=True)
-parser.add_argument('-d', '--data', action='store_true', default=False)
+parser.add_argument('-n', '--name', action='store', required=True, help='File to process')
+parser.add_argument('-d', '--data', action='store_true', default=False, help='Apply NTNI cuts for training background')
+parser.add_argument('-c', '--channel', action='store', choices=['l', 'lep', 'leptonic', 'h', 'had', 'hadronic'], default='l', help='Channel to process')
 args = parser.parse_args()
 
 import ROOT
@@ -51,7 +52,10 @@ def main():
     for i in range(t.GetEntries()):
         if (i % 10000 == 0): print('Event %d/%d' % (i, t.GetEntries()))
         t.GetEntry(i)
-        if not (N_lep[0] == 0 and N_jet30[0] >= 3 and N_bjet30_fixed70[0] > 0): continue
+        if args.channel[0] == 'l':
+            if not (N_lep[0] > 0 and N_bjet30_fixed70[0] > 0): continue
+        else:
+            if not (N_lep[0] == 0 and N_jet30[0] >= 3 and N_bjet30_fixed70[0] > 0): continue
         if (args.data and flag_passedIso[0] and flag_passedPID[0]): continue
         ej = []
         if (len(j1) > 0): ej.append([j1[0], j1[1], j1[2], j1[3], j1[4]])
@@ -70,7 +74,7 @@ def main():
 
     jets = np.array(jets)
 
-    np.save('arrays/%s%s_hadronic_jets.npy' % (args.name, '_IsoPID' if args.data else ''), jets)
+    np.save('arrays/%s%s_%s_jets.npy' % (args.name, '_IsoPID' if args.data else '', 'leptonic' if args.channel[0] == 'l' else 'hadronic'), jets)
 
     return
 
