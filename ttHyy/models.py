@@ -50,7 +50,7 @@ def model_rnn(indata):
     model = Model(inputs=m_in, outputs=m_out)
     return model
 
-def model_rnn_with_photons(indata_jets, indata_photons):
+def model_rnn_with_aux(indata_jets, indata_aux_len):
     m_in_jets = Input(shape=indata_jets[0].shape, name='in_jets')
     m_jets = Masking(mask_value=-999)(m_in_jets)
     m_jets = LSTM(32)(m_jets)
@@ -58,15 +58,15 @@ def model_rnn_with_photons(indata_jets, indata_photons):
     m_jets = Activation('relu')(m_jets)
     m_jets = Dropout(0.2)(m_jets)
 
-    #m_in_photons = Input(shape=indata_photons[0].shape, name='in_photons')
-    m_in_photons = Input(shape=(1,), name='in_photons')
+    #m_in_aux = Input(shape=indata_aux[0].shape, name='in_aux')
+    m_in_aux = Input(shape=(indata_aux_len,), name='in_aux')
 
-    m = concatenate([m_jets, m_in_photons])
+    m = concatenate([m_jets, m_in_aux])
     m = Dense(64)(m)
     m = Activation('relu')(m)
     m = Dropout(0.2)(m)
     m = Dense(1)(m)
     m_out = Activation('sigmoid')(m)
 
-    model = Model(inputs=[m_in_jets, m_in_photons], outputs=m_out)
+    model = Model(inputs=[m_in_jets, m_in_aux], outputs=m_out)
     return model

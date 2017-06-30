@@ -119,7 +119,7 @@ def train_hadronic():
 
     # save scalers for later use
     scalers = {'pt': scaler_pt, 'E': scaler_E, 'ptt': scaler_ptt}
-    pickle.dump(scalers, open('scalers.p', 'wb'))
+    pickle.dump(scalers, open('scalers_hadronic.p', 'wb'))
 
     # split data into train, val, and test samples
     print('Splitting data.')
@@ -159,12 +159,12 @@ def train_hadronic():
     # train model
     print('Train model.')
 
-    model = models.model_rnn_with_photons(train_jets, train_photons)
+    model = models.model_rnn_with_aux(train_jets, 1)
     model.summary()
     rmsprop = RMSprop(lr=0.0005)
     model.compile(optimizer=rmsprop, loss='binary_crossentropy', metrics=['accuracy'])
     es = EarlyStopping(monitor='val_loss', patience=20)
-    mc = ModelCheckpoint('models/model_hadronic_rnn_with_photons_temp.h5', monitor='val_loss', save_best_only=True)
+    mc = ModelCheckpoint('models/model_hadronic_rnn_with_aux_temp.h5', monitor='val_loss', save_best_only=True)
     try:
         model.fit([train_jets, train_photons], y_train_cat, epochs=1000, batch_size=128, validation_data=([val_jets, val_photons], y_val_cat), callbacks=[es, mc])
     except KeyboardInterrupt:
@@ -183,7 +183,7 @@ def train_hadronic():
     # save model
     if args.save:
         print('Saving model')
-        model.save_weights('models/model_hadronic_rnn_with_photons.h5')
+        model.save_weights('models/model_hadronic_rnn_with_aux.h5')
 
     return
 
