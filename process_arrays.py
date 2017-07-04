@@ -74,6 +74,7 @@ def main():
             else:
                 if not (N_lep[0] > 0 and N_bjet30_fixed70[0] > 0): continue
             if (args.data and flag_passedIso[0] and flag_passedPID[0]): continue
+            if not (mass_yy[0] > 80): continue
             
             # photons
             ep = []
@@ -108,6 +109,7 @@ def main():
             # preselection
             if not (N_lep[0] == 0 and N_jet30[0] >= 3 and N_bjet30_fixed70[0] > 0): continue
             if (args.data and flag_passedIso[0] and flag_passedPID[0]): continue
+            if not (mass_yy[0] > 80): continue
 
             # photons
             ep = []
