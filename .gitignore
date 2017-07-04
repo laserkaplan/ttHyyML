@@ -4,6 +4,7 @@
 *.root
 *.h5
 *.npy
+*.p
 ve/
 inputs
 inputs_leptonic

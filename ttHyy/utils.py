@@ -89,6 +89,8 @@ def plotROC(y_test, score, filename, show=False):
     fpr, tpr, _ = roc_curve(y_test, score)
     roc_auc = auc(fpr, tpr)
 
+    print('ROC AUC = %f' % roc_auc)
+
     fpr = 1.0 - fpr
 
     plt.grid(color='gray', linestyle='--', linewidth=1)
