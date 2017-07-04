@@ -99,8 +99,6 @@ def main():
             if (len(j7) > 0): ej.append([j7[0], j7[1], j7[2], j7[3]])
             ej = sorted(ej, key=lambda x: x[0], reverse=True)
             for j in range(7 - len(ej)): ej.append([-999] * 4)
-            ej.insert(0, [m1[0], m1[1], m1[2], m1[3]])
-            ej.insert(0, [l1[0], l1[1], l1[2], l1[3]])
             jets.append(ej)
 
             pass
